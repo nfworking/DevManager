@@ -8,6 +8,8 @@ import { type PhysicalDevice, getStorageData, saveStorageData, generateId } from
 import { DeviceDialog } from "@/components/device-dialog"
 import { DeviceDetailDialog } from "@/components/device-detail-dialog"
 import { AuthGuard } from "@/components/auth-guard"
+import { toast } from "@/hooks/use-toast"
+import { showSuccessNotification } from "@/lib/notifications"
 
 function PhysicalDevicesContent() {
   const [devices, setDevices] = useState<PhysicalDevice[]>([])
@@ -31,6 +33,17 @@ function PhysicalDevicesContent() {
       )
       data.physicalDevices = updatedDevices
       setDevices(updatedDevices)
+
+      toast({
+        title: "Device Updated",
+        description: `${deviceData.name} has been successfully updated.`,
+        variant: "success",
+      })
+
+      showSuccessNotification("Physical Device Updated", `${deviceData.name} has been successfully updated.`, {
+        label: "View Devices",
+        href: "/physical-devices",
+      })
     } else {
       const newDevice: PhysicalDevice = {
         ...deviceData,
@@ -39,6 +52,18 @@ function PhysicalDevicesContent() {
       }
       data.physicalDevices.push(newDevice)
       setDevices([...data.physicalDevices])
+
+      toast({
+        title: "Device Added",
+        description: `${deviceData.name} has been successfully added.`,
+        variant: "success",
+      })
+
+      showSuccessNotification(
+        "Physical Device Added",
+        `${deviceData.name} (${deviceData.manufacturer} ${deviceData.model}) has been added to your inventory.`,
+        { label: "View Devices", href: "/physical-devices" },
+      )
     }
 
     saveStorageData(data)
@@ -48,9 +73,21 @@ function PhysicalDevicesContent() {
 
   const handleDelete = (id: string) => {
     const data = getStorageData()
+    const deviceToDelete = data.physicalDevices.find((device) => device.id === id)
     data.physicalDevices = data.physicalDevices.filter((device) => device.id !== id)
     setDevices(data.physicalDevices)
     saveStorageData(data)
+
+    toast({
+      title: "Device Deleted",
+      description: `${deviceToDelete?.name || "Device"} has been deleted.`,
+      variant: "success",
+    })
+
+    showSuccessNotification(
+      "Physical Device Deleted",
+      `${deviceToDelete?.name || "Device"} has been removed from your inventory.`,
+    )
   }
 
   return (

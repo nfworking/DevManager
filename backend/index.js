@@ -53,6 +53,34 @@ app.get('/vms/health', (req, res) => {
   });
 });
 
+/**
+ * GET /githealth
+ * Returns current Git status of the local repo
+ */
+app.get('/githealth', (req, res) => {
+  // Run git status --short to get concise status output
+  exec('git status ', { cwd: process.cwd() }, (err, stdout, stderr) => {
+    if (err) {
+      console.error('Git Health Error:', stderr);
+      return res.status(500).send('Failed to get git status.');
+    }
+
+    // Process the output lines into an array of file status info
+    const statusLines = stdout.trim().split('\n').filter(Boolean);
+
+    // For a more detailed response, parse the status lines into objects
+    // For example: " M file.txt" => {status: "M", file: "file.txt"}
+    const statusInfo = statusLines.map(line => {
+      const status = line.slice(0, 0).trim(); // first two chars
+      const file = line.slice(0).trim();
+      return { status, file };
+    });
+
+    res.json(statusInfo);
+  });
+});
+
+
 app.listen(PORT, () => {
   console.log(`API listening at http://localhost:${PORT}`);
 });

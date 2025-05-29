@@ -8,6 +8,8 @@ import { type Account, getStorageData, saveStorageData, generateId } from "@/lib
 import { AccountDialog } from "@/components/account-dialog"
 import { AccountDetailDialog } from "@/components/account-detail-dialog"
 import { AuthGuard } from "@/components/auth-guard"
+import { toast } from "@/hooks/use-toast"
+import { showSuccessNotification } from "@/lib/notifications"
 
 function AccountsContent() {
   const [accounts, setAccounts] = useState<Account[]>([])
@@ -32,6 +34,17 @@ function AccountsContent() {
       )
       data.accounts = updatedAccounts
       setAccounts(updatedAccounts)
+
+      toast({
+        title: "Account Updated",
+        description: `${accountData.name} has been successfully updated.`,
+        variant: "success",
+      })
+
+      showSuccessNotification("Account Updated", `${accountData.name} credentials have been successfully updated.`, {
+        label: "View Accounts",
+        href: "/accounts",
+      })
     } else {
       const newAccount: Account = {
         ...accountData,
@@ -40,6 +53,18 @@ function AccountsContent() {
       }
       data.accounts.push(newAccount)
       setAccounts([...data.accounts])
+
+      toast({
+        title: "Account Added",
+        description: `${accountData.name} has been securely saved.`,
+        variant: "success",
+      })
+
+      showSuccessNotification(
+        "Account Added",
+        `${accountData.name} for ${accountData.website} has been securely saved to your vault.`,
+        { label: "View Accounts", href: "/accounts" },
+      )
     }
 
     saveStorageData(data)
@@ -49,9 +74,21 @@ function AccountsContent() {
 
   const handleDelete = (id: string) => {
     const data = getStorageData()
+    const accountToDelete = data.accounts.find((account) => account.id === id)
     data.accounts = data.accounts.filter((account) => account.id !== id)
     setAccounts(data.accounts)
     saveStorageData(data)
+
+    toast({
+      title: "Account Deleted",
+      description: `${accountToDelete?.name || "Account"} has been deleted.`,
+      variant: "success",
+    })
+
+    showSuccessNotification(
+      "Account Deleted",
+      `${accountToDelete?.name || "Account"} has been permanently removed from your vault.`,
+    )
   }
 
   return (

@@ -200,5 +200,5 @@ export const API_CONFIG = {
   // Request timeout in milliseconds
   TIMEOUT: 10000,
   // Refresh interval for live data in milliseconds
-  REFRESH_INTERVAL: 2000,
+  REFRESH_INTERVAL: 5000,
 }

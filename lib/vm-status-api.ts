@@ -48,7 +48,7 @@ export interface ConnectionStatus {
 // VM State mappings based on Hyper-V states
 export const VM_STATES = {
   0: { label: "Other", color: "text-gray-500", bgColor: "bg-gray-100 dark:bg-gray-800" },
-  1: { label: "Resumimg", color: "text-cyan-600", bgColor: "bg-cyan-100 dark:bg-cyan-900" },
+  1: { label: "Resuming", color: "text-cyan-600", bgColor: "bg-cyan-100 dark:bg-cyan-900" },
   2: { label: "Running", color: "text-green-600", bgColor: "bg-green-100 dark:bg-green-900" },
   3: { label: "Stopped", color: "text-red-600", bgColor: "bg-red-100 dark:bg-red-900" },
   4: { label: "Paused", color: "text-orange-600", bgColor: "bg-orange-100 dark:bg-orange-900" },
@@ -59,7 +59,6 @@ export const VM_STATES = {
   9: { label: "Pausing", color: "text-pink-600", bgColor: "bg-pink-100 dark:bg-pink-900" },
   10: { label: "Starting", color: "text-teal-600", bgColor: "bg-teal-100 dark:bg-teal-900" },
 } as const
-
 
 class VMStatusAPI {
   private baseUrl: string
@@ -157,63 +156,58 @@ class VMStatusAPI {
   }
 
   async getCombinedVMData(): Promise<APIResponse<CombinedVMData[]>> {
-  try {
-    // Fetch both static VM data and health data
-    const [vmResponse, healthResponse] = await Promise.all([
-      this.getVMStatus(),
-      this.getVMHealthInfo(),
-    ])
+    try {
+      // Fetch both static VM data and health data
+      const [vmResponse, healthResponse] = await Promise.all([this.getVMStatus(), this.getVMHealthInfo()])
 
-    if (!vmResponse.success) {
+      if (!vmResponse.success) {
+        return {
+          success: false,
+          error: vmResponse.error || "Failed to fetch VM status",
+          timestamp: new Date().toISOString(),
+        }
+      }
+
+      if (!healthResponse.success) {
+        return {
+          success: false,
+          error: healthResponse.error || "Failed to fetch VM health data",
+          timestamp: new Date().toISOString(),
+        }
+      }
+
+      const vmList = Array.isArray(vmResponse.data) ? vmResponse.data : [vmResponse.data]
+      const healthData = healthResponse.data || []
+
+      const combinedData: CombinedVMData[] = vmList.map((vm) => {
+        const healthInfo = healthData.find((h) => h.Name === vm.Name)
+
+        return {
+          Name: vm.Name,
+          State: vm.State,
+          ProcessorCount: vm.ProcessorCount,
+          MemoryAssigned: vm.MemoryAssigned,
+          MemoryDemand: vm.MemoryDemand,
+          Generation: vm.Generation,
+          PID: healthInfo?.PID || 0,
+          HealthMemoryAssigned: healthInfo?.MemoryAssigned || 0,
+          isRunning: vm.State === 2, // Use your corrected logic here
+        }
+      })
+
       return {
-        success: false,
-        error: vmResponse.error || "Failed to fetch VM status",
+        success: true,
+        data: combinedData,
         timestamp: new Date().toISOString(),
       }
-    }
-
-    if (!healthResponse.success) {
+    } catch (error) {
       return {
         success: false,
-        error: healthResponse.error || "Failed to fetch VM health data",
+        error: error instanceof Error ? error.message : "Failed to combine VM data",
         timestamp: new Date().toISOString(),
       }
-    }
-
-    const vmList = Array.isArray(vmResponse.data)
-      ? vmResponse.data
-      : [vmResponse.data]
-    const healthData = healthResponse.data || []
-
-    const combinedData: CombinedVMData[] = vmList.map((vm) => {
-      const healthInfo = healthData.find((h) => h.Name === vm.Name)
-
-      return {
-        Name: vm.Name,
-        State: vm.State,
-        ProcessorCount: vm.ProcessorCount,
-        MemoryAssigned: vm.MemoryAssigned,
-        MemoryDemand: vm.MemoryDemand,
-        Generation: vm.Generation,
-        PID: healthInfo?.PID || 0,
-        HealthMemoryAssigned: healthInfo?.MemoryAssigned || 0,
-        isRunning: vm.State === 2, // Use your corrected logic here
-      }
-    })
-
-    return {
-      success: true,
-      data: combinedData,
-      timestamp: new Date().toISOString(),
-    }
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to combine VM data",
-      timestamp: new Date().toISOString(),
     }
   }
-}
 
   formatMemory(bytes: number): string {
     if (bytes === 0) return "0 GB"

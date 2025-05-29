@@ -22,6 +22,12 @@ export function useKeyboardShortcuts() {
       category: "Navigation",
     },
     {
+      key: "g y",
+      description: "Go to System Info",
+      action: () => router.push("/system-info"),
+      category: "Navigation",
+    },
+    {
       key: "g s",
       description: "Go to VM Status Monitor",
       action: () => router.push("/vm-status"),
@@ -62,6 +68,15 @@ export function useKeyboardShortcuts() {
       description: "Go to Notes",
       action: () => router.push("/notes"),
       category: "Navigation",
+    },
+    // Search
+    {
+      key: "cmd k",
+      description: "Open Global Search",
+      action: () => {
+        // This is handled by the GlobalSearch component
+      },
+      category: "Search",
     },
     // Quick Actions
     {
@@ -178,6 +193,15 @@ export function useKeyboardShortcuts() {
           // Clear the stored key
           ;(window as any).__lastShortcutKey = null
           ;(window as any).__lastShortcutTime = 0
+          return
+        }
+      }
+
+      if ((event.metaKey || event.ctrlKey) && key === "k") {
+        event.preventDefault()
+        const shortcut = shortcuts.find((s) => s.key === "cmd k")
+        if (shortcut) {
+          shortcut.action()
           return
         }
       }

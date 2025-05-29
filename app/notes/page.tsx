@@ -9,6 +9,8 @@ import { type Note, getStorageData, saveStorageData, generateId } from "@/lib/st
 import { NoteDialog } from "@/components/note-dialog"
 import { NoteEditor } from "@/components/note-editor"
 import { AuthGuard } from "@/components/auth-guard"
+import { toast } from "@/hooks/use-toast"
+import { showSuccessNotification } from "@/lib/notifications"
 
 function NotesContent() {
   const [notes, setNotes] = useState<Note[]>([])
@@ -50,6 +52,17 @@ function NotesContent() {
       )
       data.notes = updatedNotes
       setNotes(updatedNotes)
+
+      toast({
+        title: "Note Updated",
+        description: `"${noteData.title}" has been successfully updated.`,
+        variant: "success",
+      })
+
+      showSuccessNotification("Note Updated", `"${noteData.title}" has been successfully updated.`, {
+        label: "View Notes",
+        href: "/notes",
+      })
     } else {
       const newNote: Note = {
         ...noteData,
@@ -59,6 +72,18 @@ function NotesContent() {
       }
       data.notes.push(newNote)
       setNotes([...data.notes])
+
+      toast({
+        title: "Note Created",
+        description: `"${noteData.title}" has been successfully created.`,
+        variant: "success",
+      })
+
+      showSuccessNotification(
+        "Note Created",
+        `"${noteData.title}" has been successfully created with ${noteData.tags.length} tags.`,
+        { label: "View Notes", href: "/notes" },
+      )
     }
 
     saveStorageData(data)
@@ -68,9 +93,18 @@ function NotesContent() {
 
   const handleDelete = (id: string) => {
     const data = getStorageData()
+    const noteToDelete = data.notes.find((note) => note.id === id)
     data.notes = data.notes.filter((note) => note.id !== id)
     setNotes(data.notes)
     saveStorageData(data)
+
+    toast({
+      title: "Note Deleted",
+      description: `"${noteToDelete?.title || "Note"}" has been deleted.`,
+      variant: "success",
+    })
+
+    showSuccessNotification("Note Deleted", `"${noteToDelete?.title || "Note"}" has been permanently deleted.`)
   }
 
   const getPreview = (content: string) => {
@@ -155,6 +189,17 @@ function NotesContent() {
           data.notes = updatedNotes
           setNotes(updatedNotes)
           saveStorageData(data)
+
+          toast({
+            title: "Note Saved",
+            description: `"${updatedNote.title}" has been saved.`,
+            variant: "success",
+          })
+
+          showSuccessNotification("Note Saved", `"${updatedNote.title}" has been successfully saved.`, {
+            label: "View Notes",
+            href: "/notes",
+          })
         }}
       />
     </div>

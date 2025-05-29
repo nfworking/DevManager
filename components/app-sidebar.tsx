@@ -1,7 +1,7 @@
 "use client"
 
 import type * as React from "react"
-import { Home, Server, Monitor, KeyRound, Layers, FileText, Settings, Plus, Disc, Activity } from "lucide-react"
+import { Home, Server, Monitor, KeyRound, Layers, FileText, Settings, Plus, Disc, Activity, Info } from "lucide-react"
 
 import {
   Sidebar,
@@ -25,6 +25,11 @@ const data = {
       title: "Dashboard",
       url: "/",
       icon: Home,
+    },
+    {
+      title: "System Info",
+      url: "/system-info",
+      icon: Info,
     },
     {
       title: "VM Status Monitor",

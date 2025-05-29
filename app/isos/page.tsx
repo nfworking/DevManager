@@ -8,6 +8,8 @@ import { type ISO, getStorageData, saveStorageData, generateId } from "@/lib/sto
 import { ISODialog } from "@/components/iso-dialog"
 import { ISODetailDialog } from "@/components/iso-detail-dialog"
 import { AuthGuard } from "@/components/auth-guard"
+import { toast } from "@/hooks/use-toast"
+import { showSuccessNotification } from "@/lib/notifications"
 
 function ISOsContent() {
   const [isos, setISOs] = useState<ISO[]>([])
@@ -29,6 +31,17 @@ function ISOsContent() {
       )
       data.isos = updatedISOs
       setISOs(updatedISOs)
+
+      toast({
+        title: "ISO Updated",
+        description: `${isoData.name} has been successfully updated.`,
+        variant: "success",
+      })
+
+      showSuccessNotification("ISO File Updated", `${isoData.name} has been successfully updated.`, {
+        label: "View ISOs",
+        href: "/isos",
+      })
     } else {
       const newISO: ISO = {
         ...isoData,
@@ -38,6 +51,18 @@ function ISOsContent() {
       data.isos = data.isos || []
       data.isos.push(newISO)
       setISOs([...data.isos])
+
+      toast({
+        title: "ISO Added",
+        description: `${isoData.name} has been added to your collection.`,
+        variant: "success",
+      })
+
+      showSuccessNotification(
+        "ISO File Added",
+        `${isoData.name} (${isoData.size}) has been added to your ISO collection.`,
+        { label: "View ISOs", href: "/isos" },
+      )
     }
 
     saveStorageData(data)
@@ -47,9 +72,21 @@ function ISOsContent() {
 
   const handleDelete = (id: string) => {
     const data = getStorageData()
+    const isoToDelete = data.isos.find((iso) => iso.id === id)
     data.isos = data.isos.filter((iso) => iso.id !== id)
     setISOs(data.isos)
     saveStorageData(data)
+
+    toast({
+      title: "ISO Deleted",
+      description: `${isoToDelete?.name || "ISO file"} has been deleted.`,
+      variant: "success",
+    })
+
+    showSuccessNotification(
+      "ISO File Deleted",
+      `${isoToDelete?.name || "ISO file"} has been removed from your collection.`,
+    )
   }
 
   return (

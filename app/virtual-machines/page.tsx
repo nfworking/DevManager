@@ -8,6 +8,8 @@ import { type VirtualMachine, getStorageData, saveStorageData, generateId } from
 import { VMDialog } from "@/components/vm-dialog"
 import { VMDetailDialog } from "@/components/vm-detail-dialog"
 import { AuthGuard } from "@/components/auth-guard"
+import { toast } from "@/hooks/use-toast"
+import { showSuccessNotification } from "@/lib/notifications"
 
 function VirtualMachinesContent() {
   const [vms, setVMs] = useState<VirtualMachine[]>([])
@@ -30,6 +32,18 @@ function VirtualMachinesContent() {
       )
       data.virtualMachines = updatedVMs
       setVMs(updatedVMs)
+
+      // Show success toast and notification
+      toast({
+        title: "Virtual Machine Updated",
+        description: `${vmData.name} has been successfully updated.`,
+        variant: "success",
+      })
+
+      showSuccessNotification("Virtual Machine Updated", `${vmData.name} has been successfully updated.`, {
+        label: "View VMs",
+        href: "/virtual-machines",
+      })
     } else {
       // Create new VM
       const newVM: VirtualMachine = {
@@ -39,6 +53,19 @@ function VirtualMachinesContent() {
       }
       data.virtualMachines.push(newVM)
       setVMs([...data.virtualMachines])
+
+      // Show success toast and notification
+      toast({
+        title: "Virtual Machine Created",
+        description: `${vmData.name} has been successfully created.`,
+        variant: "success",
+      })
+
+      showSuccessNotification(
+        "Virtual Machine Created",
+        `${vmData.name} has been successfully created with ${vmData.provider} provider.`,
+        { label: "View VMs", href: "/virtual-machines" },
+      )
     }
 
     saveStorageData(data)
@@ -48,9 +75,22 @@ function VirtualMachinesContent() {
 
   const handleDelete = (id: string) => {
     const data = getStorageData()
+    const vmToDelete = data.virtualMachines.find((vm) => vm.id === id)
     data.virtualMachines = data.virtualMachines.filter((vm) => vm.id !== id)
     setVMs(data.virtualMachines)
     saveStorageData(data)
+
+    // Show success toast and notification
+    toast({
+      title: "Virtual Machine Deleted",
+      description: `${vmToDelete?.name || "Virtual machine"} has been deleted.`,
+      variant: "success",
+    })
+
+    showSuccessNotification(
+      "Virtual Machine Deleted",
+      `${vmToDelete?.name || "Virtual machine"} has been permanently deleted.`,
+    )
   }
 
   return (

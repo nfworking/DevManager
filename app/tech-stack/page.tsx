@@ -8,6 +8,8 @@ import { type TechStack, getStorageData, saveStorageData, generateId } from "@/l
 import { TechStackDialog } from "@/components/tech-stack-dialog"
 import { TechStackDetailDialog } from "@/components/tech-stack-detail-dialog"
 import { AuthGuard } from "@/components/auth-guard"
+import { toast } from "@/hooks/use-toast"
+import { showSuccessNotification } from "@/lib/notifications"
 
 function TechStackContent() {
   const [techStacks, setTechStacks] = useState<TechStack[]>([])
@@ -31,6 +33,18 @@ function TechStackContent() {
       )
       data.techStack = updatedTechStacks
       setTechStacks(updatedTechStacks)
+
+      toast({
+        title: "Technology Updated",
+        description: `${techStackData.name} has been successfully updated.`,
+        variant: "success",
+      })
+
+      showSuccessNotification(
+        "Technology Updated",
+        `${techStackData.name} has been successfully updated in your tech stack.`,
+        { label: "View Tech Stack", href: "/tech-stack" },
+      )
     } else {
       const newTechStack: TechStack = {
         ...techStackData,
@@ -39,6 +53,18 @@ function TechStackContent() {
       }
       data.techStack.push(newTechStack)
       setTechStacks([...data.techStack])
+
+      toast({
+        title: "Technology Added",
+        description: `${techStackData.name} has been added to your stack.`,
+        variant: "success",
+      })
+
+      showSuccessNotification(
+        "Technology Added",
+        `${techStackData.name} has been added to your tech stack for ${techStackData.os}.`,
+        { label: "View Tech Stack", href: "/tech-stack" },
+      )
     }
 
     saveStorageData(data)
@@ -48,9 +74,21 @@ function TechStackContent() {
 
   const handleDelete = (id: string) => {
     const data = getStorageData()
+    const techToDelete = data.techStack.find((tech) => tech.id === id)
     data.techStack = data.techStack.filter((tech) => tech.id !== id)
     setTechStacks(data.techStack)
     saveStorageData(data)
+
+    toast({
+      title: "Technology Removed",
+      description: `${techToDelete?.name || "Technology"} has been removed.`,
+      variant: "success",
+    })
+
+    showSuccessNotification(
+      "Technology Removed",
+      `${techToDelete?.name || "Technology"} has been removed from your tech stack.`,
+    )
   }
 
   return (

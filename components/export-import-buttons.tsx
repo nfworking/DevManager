@@ -15,21 +15,37 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { downloadDataAsFile, importData } from "@/lib/storage"
-import { Download, Upload, FileText, CheckCircle, XCircle } from "lucide-react"
+import { Download, Upload, FileText } from "lucide-react"
+import { toast } from "@/hooks/use-toast"
+import { showSuccessNotification, showErrorNotification } from "@/lib/notifications"
 
 export function ExportImportButtons() {
   const [importOpen, setImportOpen] = useState(false)
-  const [importStatus, setImportStatus] = useState<"idle" | "success" | "error">("idle")
-  const [importMessage, setImportMessage] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleExport = () => {
     try {
       downloadDataAsFile()
+      toast({
+        title: "Data Exported",
+        description: "Your data has been successfully exported.",
+        variant: "success",
+      })
+
+      showSuccessNotification(
+        "Data Exported",
+        "Your development environment data has been successfully exported as a backup file.",
+      )
     } catch (error) {
       console.error("Export failed:", error)
+      toast({
+        title: "Export Failed",
+        description: "Failed to export data. Please try again.",
+        variant: "destructive",
+      })
+
+      showErrorNotification("Export Failed", "Failed to export your data. Please try again.")
     }
   }
 
@@ -44,23 +60,48 @@ export function ExportImportButtons() {
         const success = importData(content)
 
         if (success) {
-          setImportStatus("success")
-          setImportMessage("Data imported successfully! Please refresh the page to see changes.")
+          toast({
+            title: "Data Imported",
+            description: "Data imported successfully! Please refresh the page to see changes.",
+            variant: "success",
+          })
+
+          showSuccessNotification(
+            "Data Imported",
+            "Your data has been successfully imported. Please refresh the page to see all changes.",
+          )
+
+          setImportOpen(false)
+          setTimeout(() => window.location.reload(), 2000)
         } else {
-          setImportStatus("error")
-          setImportMessage("Failed to import data. Please check the file format.")
+          toast({
+            title: "Import Failed",
+            description: "Failed to import data. Please check the file format.",
+            variant: "destructive",
+          })
+
+          showErrorNotification(
+            "Import Failed",
+            "Failed to import data. Please ensure the file is a valid Dev Manager backup.",
+          )
         }
       } catch (error) {
-        setImportStatus("error")
-        setImportMessage("Error reading file. Please ensure it's a valid JSON file.")
+        toast({
+          title: "Import Error",
+          description: "Error reading file. Please ensure it's a valid JSON file.",
+          variant: "destructive",
+        })
+
+        showErrorNotification(
+          "Import Error",
+          "Error reading the selected file. Please ensure it's a valid JSON backup file.",
+        )
       }
     }
     reader.readAsText(file)
   }
 
   const resetImportDialog = () => {
-    setImportStatus("idle")
-    setImportMessage("")
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
     }
@@ -103,36 +144,17 @@ export function ExportImportButtons() {
           </DialogHeader>
 
           <div className="space-y-4">
-            {importStatus === "idle" && (
-              <div className="space-y-2">
-                <Label htmlFor="file-upload">Select backup file</Label>
-                <Input id="file-upload" type="file" accept=".json" ref={fileInputRef} onChange={handleFileSelect} />
-                <p className="text-xs text-muted-foreground">
-                  Only JSON files exported from Dev Manager are supported.
-                </p>
-              </div>
-            )}
-
-            {importStatus === "success" && (
-              <Alert className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950">
-                <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
-                <AlertDescription className="text-green-800 dark:text-green-200">{importMessage}</AlertDescription>
-              </Alert>
-            )}
-
-            {importStatus === "error" && (
-              <Alert variant="destructive">
-                <XCircle className="h-4 w-4" />
-                <AlertDescription>{importMessage}</AlertDescription>
-              </Alert>
-            )}
+            <div className="space-y-2">
+              <Label htmlFor="file-upload">Select backup file</Label>
+              <Input id="file-upload" type="file" accept=".json" ref={fileInputRef} onChange={handleFileSelect} />
+              <p className="text-xs text-muted-foreground">Only JSON files exported from Dev Manager are supported.</p>
+            </div>
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setImportOpen(false)}>
-              {importStatus === "success" ? "Close" : "Cancel"}
+              Cancel
             </Button>
-            {importStatus === "success" && <Button onClick={() => window.location.reload()}>Refresh Page</Button>}
           </DialogFooter>
         </DialogContent>
       </Dialog>
